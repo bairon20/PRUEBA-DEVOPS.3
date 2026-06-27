@@ -1,0 +1,141 @@
+name: Deploy to Amazon ECS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-west-2
+  ECS_CLUSTER: proyecto-semestral-cluster
+
+  FRONTEND_SERVICE: front-despacho-service
+  FRONTEND_CONTAINER: front-despacho
+  FRONTEND_ECR_REPOSITORY: front-despacho
+  FRONTEND_TASK_DEFINITION: front-despacho-task-def.json
+
+  VENTAS_SERVICE: ventas-api-service
+  VENTAS_CONTAINER: ventas-api
+  VENTAS_ECR_REPOSITORY: ventas-api
+  VENTAS_TASK_DEFINITION: ventas-api-task-def.json
+
+  DESPACHOS_SERVICE: despachos-api-service
+  DESPACHOS_CONTAINER: despachos-api
+  DESPACHOS_ECR_REPOSITORY: despachos-api
+  DESPACHOS_TASK_DEFINITION: despachos-api-task-def.json
+
+jobs:
+  deploy:
+    name: Build Push and Deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        id: build-frontend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/${{ env.FRONTEND_ECR_REPOSITORY }}:$IMAGE_TAG \
+            -t $ECR_REGISTRY/${{ env.FRONTEND_ECR_REPOSITORY }}:latest \
+            ./front_despacho
+          docker push $ECR_REGISTRY/${{ env.FRONTEND_ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/${{ env.FRONTEND_ECR_REPOSITORY }}:latest
+          echo "image=$ECR_REGISTRY/${{ env.FRONTEND_ECR_REPOSITORY }}:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push ventas image
+        id: build-ventas
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/${{ env.VENTAS_ECR_REPOSITORY }}:$IMAGE_TAG \
+            -t $ECR_REGISTRY/${{ env.VENTAS_ECR_REPOSITORY }}:latest \
+            ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker push $ECR_REGISTRY/${{ env.VENTAS_ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/${{ env.VENTAS_ECR_REPOSITORY }}:latest
+          echo "image=$ECR_REGISTRY/${{ env.VENTAS_ECR_REPOSITORY }}:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push despachos image
+        id: build-despachos
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/${{ env.DESPACHOS_ECR_REPOSITORY }}:$IMAGE_TAG \
+            -t $ECR_REGISTRY/${{ env.DESPACHOS_ECR_REPOSITORY }}:latest \
+            ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker push $ECR_REGISTRY/${{ env.DESPACHOS_ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/${{ env.DESPACHOS_ECR_REPOSITORY }}:latest
+          echo "image=$ECR_REGISTRY/${{ env.DESPACHOS_ECR_REPOSITORY }}:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Render frontend task definition
+        id: render-frontend
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.FRONTEND_TASK_DEFINITION }}
+          container-name: ${{ env.FRONTEND_CONTAINER }}
+          image: ${{ steps.build-frontend.outputs.image }}
+
+      - name: Deploy frontend service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-frontend.outputs.task-definition }}
+          service: ${{ env.FRONTEND_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Render ventas task definition
+        id: render-ventas
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.VENTAS_TASK_DEFINITION }}
+          container-name: ${{ env.VENTAS_CONTAINER }}
+          image: ${{ steps.build-ventas.outputs.image }}
+
+      - name: Deploy ventas service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-ventas.outputs.task-definition }}
+          service: ${{ env.VENTAS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Render despachos task definition
+        id: render-despachos
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.DESPACHOS_TASK_DEFINITION }}
+          container-name: ${{ env.DESPACHOS_CONTAINER }}
+          image: ${{ steps.build-despachos.outputs.image }}
+
+      - name: Deploy despachos service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-despachos.outputs.task-definition }}
+          service: ${{ env.DESPACHOS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
