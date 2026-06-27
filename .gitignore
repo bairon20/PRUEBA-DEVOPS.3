@@ -16,3 +16,4 @@ task-def-ventas.json
 *-taskdef-fix.json
 *-task-logs.json
 *-task-v4.json
+!.github/ecs/*.json

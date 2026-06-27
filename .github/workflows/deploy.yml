@@ -14,17 +14,17 @@ env:
   FRONTEND_SERVICE: front-despacho-service
   FRONTEND_CONTAINER: front-despacho
   FRONTEND_ECR_REPOSITORY: front-despacho
-  FRONTEND_TASK_DEFINITION: front-despacho-task-def.json
+  FRONTEND_TASK_DEFINITION: .github/ecs/front-despacho-task-def.json
 
   VENTAS_SERVICE: ventas-api-service
   VENTAS_CONTAINER: ventas-api
   VENTAS_ECR_REPOSITORY: ventas-api
-  VENTAS_TASK_DEFINITION: ventas-api-task-def.json
+  VENTAS_TASK_DEFINITION: .github/ecs/ventas-api-task-def.json
 
   DESPACHOS_SERVICE: despachos-api-service
   DESPACHOS_CONTAINER: despachos-api
   DESPACHOS_ECR_REPOSITORY: despachos-api
-  DESPACHOS_TASK_DEFINITION: despachos-api-task-def.json
+  DESPACHOS_TASK_DEFINITION: .github/ecs/despachos-api-task-def.json
 
 jobs:
   deploy:

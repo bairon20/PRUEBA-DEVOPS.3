@@ -1,0 +1,51 @@
+{
+  "family": "ventas-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::391963702614:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "ventas-api",
+        "image": "391963702614.dkr.ecr.us-west-2.amazonaws.com/ventas-api:dbfix-20260626-3",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ventas-api",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "environment": [
+        {
+          "name": "DB_ENDPOINT",
+          "value": "proyecto-semestral-db.chwq9x4pmfno.us-west-2.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "3306"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "ventas"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "admin"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "ProyectoSemestral123!"
+        }
+      ]
+    }
+  ]
+}

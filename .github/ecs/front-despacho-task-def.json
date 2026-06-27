@@ -1,0 +1,29 @@
+{
+  "family": "front-despacho",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::391963702614:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "front-despacho",
+        "image": "391963702614.dkr.ecr.us-west-2.amazonaws.com/front-despacho:frontfix-20260626-5",
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/front-despacho",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
