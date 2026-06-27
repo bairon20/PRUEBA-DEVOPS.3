@@ -11,7 +11,7 @@ export const PruebaCards = () => {
     <section>
       <div className="flex justify-center">
         <CardComponent
-          title="Crear Orden despacho"
+          title="Crear Orden despacho20005332"
           description="Revisa las ordenes de compra disponibles y genera un despacho nuevo"
           buttonText="Crear despacho"
           onClick={() => {
