@@ -1,0 +1,39 @@
+import { useState } from "react";
+import { CardComponent } from "./CardComponent";
+import { TableCompras } from "./TableCompras";
+import { TableDespachos } from "./TableDespachos";
+
+export const PruebaCards = () => {
+  const [tablaCompras, setTablaCompras] = useState(false);
+  const [tablaOrdenes, setTablaOrdenes] = useState(false);
+
+  return (
+    <section>
+      <div className="flex justify-center">
+        <CardComponent
+          title="Crear Orden de despacho 💰"
+          description="Revisa las ordenes de compra disponibles y genera un despacho nuevo"
+          buttonText="Crear despacho"
+          onClick={() => {
+            setTablaCompras(true);
+            setTablaOrdenes(false);
+          }}
+        />
+        <CardComponent
+          title="Revisar Ordenes de despacho 🚚"
+          description="Consulta los despachos realizados, modifica los registros de intentos o cierra la orden"
+          buttonText="Consultar"
+          onClick={() => {
+            setTablaCompras(false);
+            setTablaOrdenes(true);
+          }}
+        />
+      </div>
+
+      <section>
+        {tablaCompras && <TableCompras />}
+        {tablaOrdenes && <TableDespachos />}
+      </section>
+    </section>
+  );
+};
