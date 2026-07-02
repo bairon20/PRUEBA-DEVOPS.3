@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { API_VENTAS_URL } from "../../config/api";
 
 export const FormVenta = ({ onClose }) => {
   const { register, handleSubmit, reset } = useForm();
@@ -12,14 +13,23 @@ export const FormVenta = ({ onClose }) => {
       fechaCompra: data.fechaCompra,
       despachoGenerado: false,
     };
+    const endpoint = `${API_VENTAS_URL}/api/v1/ventas`;
+
+    // #region debug-point A:submit-request
+    fetch("http://127.0.0.1:7777/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: "venta-create-error", runId: "pre-fix", hypothesisId: "A", location: "FormVenta.jsx:onSubmit:pre", msg: "[DEBUG] Sending create venta request", data: { endpoint, payload }, ts: Date.now() }) }).catch(() => {});
+    // #endregion
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_VENTAS_URL}/api/v1/ventas`, payload, {
+      const response = await axios.post(endpoint, payload, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
       });
+
+      // #region debug-point D:submit-success
+      fetch("http://127.0.0.1:7777/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: "venta-create-error", runId: "pre-fix", hypothesisId: "D", location: "FormVenta.jsx:onSubmit:success", msg: "[DEBUG] Venta created successfully", data: { endpoint, responseStatus: response?.status, responseData: response?.data }, ts: Date.now() }) }).catch(() => {});
+      // #endregion
 
       reset();
       await Swal.fire({
@@ -30,7 +40,9 @@ export const FormVenta = ({ onClose }) => {
       });
       onClose();
     } catch (error) {
-      console.error("Error creando venta:", error);
+      // #region debug-point E:submit-error
+      fetch("http://127.0.0.1:7777/event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: "venta-create-error", runId: "pre-fix", hypothesisId: "E", location: "FormVenta.jsx:onSubmit:catch", msg: "[DEBUG] Venta create request failed", data: { endpoint, message: error?.message, code: error?.code, responseStatus: error?.response?.status, responseData: error?.response?.data, requestUrl: error?.config?.url }, ts: Date.now() }) }).catch(() => {});
+      // #endregion
       Swal.fire({
         title: "Error",
         text: "No se pudo crear la venta.",
